@@ -1,0 +1,136 @@
+---
+title: "ExamenBioinformatica_2022"
+author: "Irene de Dios"
+date: "31/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## EXAMEN BIOINFORMATICA 2022
+### EJERCICIO 1.
+### a. ¿Cuantas palabras hay en el fichero?
+#### cat genes.txt | wc, aparecerán tres números, el del medio nos indicará el 
+#### numero de palabras
+
+### b. ¿Cómo cambiarías todos los tabulados por guiones?
+#### cat genes.txt | sed 's/\t/-/g'
+
+### c. ¿Cómo cambiarías solo la primera aparición?
+#### cat genes.txt | sed 's/\t/-/'
+
+### d.¿Como buscarías todos los genes excepto el gen llamado DSTYK?
+#### cat genes.txt | grep -v 'DSTYK'
+
+
+### EJERCICIO 2A. ¿Cuantas columnas y cuantos registros tiene el dataset?
+#### Para saber cuantas columnas y registros, lo podemos hacer de dos maneras, 
+#### nrow nos devolvera el numero de registros y ncol el de columnas. 
+#### si escribimos dim, nos dara ambos simultaneamente, primero las filas y seguidos, las columnas
+```{r}
+
+ncol(weather)
+nrow(weather)
+dim(weather)
+
+```
+### EJERCICIO 2B. ¿Cuántos “origin” diferentes existen y para cada uno de ellos cuántos registros hay?
+```{r}
+table(weather$origin)
+```
+
+### EJERCICIO 2C.  En LGA,  ¿cuálesfueron la mediana del wind_speed y media de pressure?
+```{r}
+LGA <- weather[weather$origin == "LGA",]
+
+median(LGA$wind_speed)
+mean(LGA$pressure, na.rm = T)
+```
+```{r}
+
+```
+
+### EJERCICIO 2D. Después de eliminar los NA de la columna wind_gust, calcula para cada mes la media de wind_speed y wind_gust, y el número de casos.
+```{r}
+weather_NA <- weather[complete.cases(weather$wind_gust),]
+
+dif_meses <- weather_NA %>%
+  group_by(month) %>%
+  summarise(media_wind_speed = mean(wind_speed),
+            media_wind_gust = mean(wind_gust),
+            n_casos = n()
+  )
+  dif_meses
+```
+### EJERCICIO 3.1. Crea el plot anterior
+```{r}
+EWR = weather[weather$origin =="EWR" ,]
+LGA = weather[weather$origin =="LGA" ,]
+JFK = weather[weather$origin =="JFK" ,]
+par(mfrow = c(1,3))
+boxplot(EWR$temp~EWR$month, xlab = "Months", ylab = "ºC", main = "EWR", col = 2)
+boxplot(JFK$temp~JFK$month, xlab = "Months", ylab = "ºC", main = "JFK", col = 3)
+boxplot(LGA$temp~LGA$month, xlab = "Months", ylab = "ºC", main = "LGA", col = 4)
+
+
+```
+### EJERCICIO 3.2.Crea una funcion
+```{r}
+function(x, y, z)
+{
+  boxplot(EWR$temp~EWR$month, xlab = "Months", ylab = "ºC", main = "EWR", col = "red")
+boxplot(JFK$temp~JFK$month, xlab = "Months", ylab = "ºC", main = "JFK", col = "green")
+boxplot(LGA$temp~LGA$month, xlab = "Months", ylab = "ºC", main = "LGA", col = "blue")
+}
+{
+  print(mean(EWR$temp, na.rm = T))
+  print(mean(JFK$temp, na.rm = T))
+  print(mean(LGA$temp, na.rm = T))
+}
+```
+### EJERCICIO 4. El día de tu cumpleaños:
+### a. Qué correlación tuvieron la temperatura y humedad en cada uno de los origin?
+```{r}
+EWR <- weather[weather$origin == "EWR" & weather$month == 1 & weather$day == 29, ]
+JFK <- weather[weather$origin == "JFK" & weather$month == 1 & weather$day == 29, ]
+LGA <- weather[weather$origin == "LGA" & weather$month == 1 & weather$day == 29, ]
+
+cor(EWR$temp, EWR$humid)
+cor(JFK$temp, EWR$humid)
+cor(LGA$temp, EWR$humid)
+
+cumple <- weather[weather$month == 1 & weather$day == 29, ]
+
+ggplot(data = cumple) + 
+geom_point(mapping = aes(x = temp, y = humid, col = origin))
+
+```
+#### en los tres casos obtengo una correlación negativa, por lo que no existe relacion entre ambos
+
+### b. Si comparas la temperatura en los origins JFK y LGA? ¿Qué p-valor consigues? Plotea los boxplots. ¿son estadísticamente diferentes?
+```{r}
+t.test(JFK$temp, LGA$temp)
+
+```
+#### El pvalor que consigo es mayor que 0.05 por lo que no podemos afirmar que existe una relacion entre ambos orígenes y sus temperaturas. 
+```{r}
+boxplot(JFK$temp ~ LGA$temp, col = c(2,3), legend.text = TRUE, xlab = "Temperatura:LGA", ylab = "Temperatura:JFK", main = "Boxplot")
+
+par(mfrow = c(1,2))
+boxplot(JFK$temp, col = 2, legend.text = TRUE, main = "Boxplot JFK", xlab = "JFK", ylab = "Temperature")
+boxplot(LGA$temp, col = 4, legend.text = TRUE, main = "Boxplot LGA", xlab = "LGA", ylab = "Temperature")
+```
+
+
+### EJERCICIO 5a. ¿Cuál es el punto con FC (Fold change) más grande en valores absoluto
+#### El fold change esta en la x y nos dice cuantas veces mas o menos esta expresado un gen. En este caso, nos deberemos de fijar en que gen tiene los valores mas altos en valores absolutos. En este caso, será el punto morado de más a la izquierda, con un pvalor cercano a 5 sin nombre
+
+### EJERCICIO 5b. ¿Que gen sobreexpresado es el más significativo?
+####  El pvalor nos dice que significancia tiene un gen, por lo cual, a más hacia arriba mas significancia, además, cuanto mas hacia la derecha mayor importancia en cuanto a la sobreexpresión. Es por ello por lo que he decucido que el gen sobreexpresado mas significativo es Rbp1. 
+
+```{r}
+sessionInfo()
+```
+
